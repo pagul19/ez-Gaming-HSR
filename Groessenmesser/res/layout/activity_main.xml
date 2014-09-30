@@ -25,4 +25,13 @@
         android:layout_marginBottom="60dp"
         android:ems="10" />
 
+    <Button
+        android:id="@+id/measureB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/measureB_text" 
+        android:onClick="onMeasureB" />
+
 </RelativeLayout>

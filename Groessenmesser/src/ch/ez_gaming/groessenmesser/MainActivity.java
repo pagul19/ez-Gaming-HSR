@@ -1,17 +1,23 @@
 package ch.ez_gaming.groessenmesser;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 
 public class MainActivity extends Activity {
 
+	private Button mMeasureB; //google convention to name imported widgets from xml with an "m" prefix
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mMeasureB = (Button)findViewById(R.id.measureB);
     }
 
 
@@ -32,5 +38,11 @@ public class MainActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+    //executed on button press
+    public void onMeasureB(View view) {
+    	Intent measureIntent = new Intent(this, MeasureActivity.class);
+    	startActivity(measureIntent);
     }
 }
