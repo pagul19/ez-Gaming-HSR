@@ -8,23 +8,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="ch.ez_gaming.groessenmesser.MainActivity" >
 
-    <EditText 
-        android:id="@+id/sInputBeta"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="60dp"
-        android:ems="10" />
-    <EditText 
-        android:id="@+id/sInputAlpha"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="60dp"
-        android:ems="10" />
-
     <Button
         android:id="@+id/measureB"
         android:layout_width="wrap_content"
@@ -32,6 +15,54 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:text="@string/measureB_text" 
-        android:onClick="onMeasureB" />
+        android:onClick="onButton" />
+    
+        <Button
+        android:id="@+id/calB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/measureB"
+        android:layout_centerHorizontal="true"
+        android:text="@string/calB" 
+        android:onClick="onButton"/>
+
+    	<Button
+        android:id="@+id/resetB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/calB"
+        android:text="@string/resetB" 
+        android:onClick="onButton"/>
+
+    <TextView
+        android:id="@+id/aplhaLa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
+
+    <TextView
+        android:id="@+id/betaLa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/aplhaLa" />
+
+    <TextView
+        android:id="@+id/resLa"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/disTf" />
+
+    <EditText
+        android:id="@+id/disTf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/betaLa"
+        android:layout_centerHorizontal="true"
+        android:ems="10"
+        android:inputType="number" />
 
 </RelativeLayout>

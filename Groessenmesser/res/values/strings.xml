@@ -6,5 +6,7 @@
     <string name="measureB_text">measure</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_measure">MeasureActivity</string>
+    <string name="calB">calculate</string>
+    <string name="resetB">reset</string>
 
 </resources>

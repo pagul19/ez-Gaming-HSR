@@ -1,14 +1,29 @@
 package ch.ez_gaming.groessenmesser;
 
+import java.io.IOException;
+
 import android.app.Activity;
+import android.content.Intent;
+import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
+import android.view.SurfaceView;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class MeasureActivity extends Activity {
+public class MeasureActivity extends Activity implements Callback {
 
+	private Camera cam;
+	private SurfaceHolder camHolder;
+	private SensorManager sm;
+	private Sensor magnetFS, accellS;
+	private SensorHandler sHandler;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -18,7 +33,37 @@ public class MeasureActivity extends Activity {
         		WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //until here ----->
 		setContentView(R.layout.activity_measure);
+		
+		sm = (SensorManager)getSystemService(SENSOR_SERVICE);
+		magnetFS = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+		accellS = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		
+		sHandler = new SensorHandler();
+		sm.registerListener(sHandler, magnetFS, SensorManager.SENSOR_DELAY_NORMAL);
+		sm.registerListener(sHandler, accellS, SensorManager.SENSOR_DELAY_NORMAL);
+		
 	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		
+		if(cam != null) {
+			cam.stopPreview();
+			cam.release();
+		}
+			
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		SurfaceView sfv = (SurfaceView)findViewById(R.id.surfaceV1);
+		camHolder = sfv.getHolder();
+		camHolder.addCallback(this);
+	}
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -37,5 +82,38 @@ public class MeasureActivity extends Activity {
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		cam = Camera.open();
+	}
+
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+		cam.stopPreview();
+		cam.setDisplayOrientation(90);
+		
+		Camera.Parameters parms = cam.getParameters();
+		Camera.Size size = parms.getPreviewSize();
+		parms.setPreviewSize(size.width, size.height);
+		cam.setParameters(parms);
+		
+		try {
+			cam.setPreviewDisplay(holder);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		cam.startPreview();
+	}
+
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {}
+	
+	public void onButton() {
+		Intent d = new Intent(); //empty intent to send the double value back
+		d.putExtra("DEGREE", sHandler.getCurrentRotationValue());
+		setResult(RESULT_OK,d);
 	}
 }
