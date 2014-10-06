@@ -17,7 +17,8 @@ public class MainActivity extends Activity {
 	private EditText mDisTf;
 	private TextView mAlphaLa, mBetaLa, mResLa;
 	
-	final static int DEGREE_REQUEST_CODE = 0;
+	final static int DEGREE_REQUEST_CODE_1 = 0;
+	final static int DEGREE_REQUEST_CODE_2 = 1;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +63,7 @@ public class MainActivity extends Activity {
     	switch (view.getId()) {
     		case R.id.measureB: 
     			Intent i = new Intent(this, MeasureActivity.class);
-    			startActivityForResult(i, DEGREE_REQUEST_CODE);
+    			startActivityForResult(i, DEGREE_REQUEST_CODE_1);
     			break;
     		case R.id.calB:
     			calculate();
@@ -77,16 +78,21 @@ public class MainActivity extends Activity {
 		// TODO Auto-generated method stub
 		
 	}
-
-
+    
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == DEGREE_REQUEST_CODE) {
+        if (requestCode == DEGREE_REQUEST_CODE_1) {
             if (resultCode == RESULT_OK) {
             	mMeasureB.setEnabled(false);
             	double dAngledata = data.getDoubleExtra("ANGLE", 90);
             	mAlphaLa.setText(String.format("The angle alpha is: %.2f", dAngledata));
-            	mBetaLa.setText(String.format("The angle alpha is: %.2f", dAngledata));
+    			Intent i = new Intent(this, MeasureActivity.class);
+    			startActivityForResult(i, DEGREE_REQUEST_CODE_2);
+            }
+        } else if (requestCode == DEGREE_REQUEST_CODE_2) {
+            if (resultCode == RESULT_OK) {
+            	double dAngledata = data.getDoubleExtra("ANGLE", 90);
+            	mBetaLa.setText(String.format("The angle beta is: %.2f", dAngledata));
             }
         }
     }

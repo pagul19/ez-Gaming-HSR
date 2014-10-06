@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -111,9 +112,10 @@ public class MeasureActivity extends Activity implements Callback {
 	@Override
 	public void surfaceDestroyed(SurfaceHolder holder) {}
 	
-	public void onButton() {
+	public void onButton(View view) {
 		Intent d = new Intent(); //empty intent to send the double value back
 		d.putExtra("DEGREE", sHandler.getCurrentRotationValue());
 		setResult(RESULT_OK,d);
+		finish();
 	}
 }
