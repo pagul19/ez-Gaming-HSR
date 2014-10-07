@@ -16,9 +16,9 @@ public class MainActivity extends Activity {
 	private Button mMeasureB, mCalcB, mResetB; //google convention to name imported widgets from xml with an "m" prefix
 	private EditText mDisTf;
 	private TextView mAlphaLa, mBetaLa, mResLa;
+	private double dAlpha, dBeta;
 	
 	final static int DEGREE_REQUEST_CODE_1 = 0;
-	final static int DEGREE_REQUEST_CODE_2 = 1;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,16 +67,33 @@ public class MainActivity extends Activity {
     			break;
     		case R.id.calB:
     			calculate();
+    			break;
     		case R.id.resetB:
     			mCalcB.setEnabled(false);
+    	        mResetB.setEnabled(false);
+    			mMeasureB.setEnabled(true);
+    			dAlpha = 0;
+    			dBeta = 0;
+    			mAlphaLa.setText("");
+    			mBetaLa.setText("");
+    			mResLa.setText("");
+    			mDisTf.setText("");
+    			break;
     		default:
     			break;
     	}
     }
     
     private void calculate() {
-		// TODO Auto-generated method stub
-		
+    	String distanceEntered = mDisTf.getText().toString();
+    	if(distanceEntered != null && !distanceEntered.isEmpty()) {
+    		double dDistanceEntered = Double.parseDouble(distanceEntered);
+        	double c = dDistanceEntered/Math.sin(dAlpha);
+        	double dGamma = 180 - dAlpha - dBeta;
+        	double b = c * Math.sin(dBeta) / Math.sin(dGamma);
+        	mResLa.setText(String.format("The object is %.2f Meters high", b));
+        	mCalcB.setEnabled(false);
+    	}
 	}
     
 	@Override
@@ -84,15 +101,14 @@ public class MainActivity extends Activity {
         if (requestCode == DEGREE_REQUEST_CODE_1) {
             if (resultCode == RESULT_OK) {
             	mMeasureB.setEnabled(false);
-            	double dAngledata = data.getDoubleExtra("ANGLE", 90);
-            	mAlphaLa.setText(String.format("The angle alpha is: %.2f", dAngledata));
-    			Intent i = new Intent(this, MeasureActivity.class);
-    			startActivityForResult(i, DEGREE_REQUEST_CODE_2);
-            }
-        } else if (requestCode == DEGREE_REQUEST_CODE_2) {
-            if (resultCode == RESULT_OK) {
-            	double dAngledata = data.getDoubleExtra("ANGLE", 90);
-            	mBetaLa.setText(String.format("The angle beta is: %.2f", dAngledata));
+            	dAlpha = data.getDoubleExtra("ALPHA", 90);
+            	mAlphaLa.setText(String.format("The angle alpha is: %.2f", dAlpha));
+            	dBeta = data.getDoubleExtra("BETA", 90);
+            	mBetaLa.setText(String.format("The beta alpha is: %.2f", dBeta));
+    			mMeasureB.setEnabled(false);
+    			mCalcB.setEnabled(true);
+    	        mResetB.setEnabled(true);
+    	        mDisTf.setEnabled(true);
             }
         }
     }

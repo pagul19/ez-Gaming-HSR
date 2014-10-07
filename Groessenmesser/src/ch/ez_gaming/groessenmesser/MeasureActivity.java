@@ -24,7 +24,7 @@ public class MeasureActivity extends Activity implements Callback {
 	private SensorManager sm;
 	private Sensor magnetFS, accellS;
 	private SensorHandler sHandler;
-	private double angleA;
+	private double dAngleA = 500;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -114,10 +114,18 @@ public class MeasureActivity extends Activity implements Callback {
 	public void surfaceDestroyed(SurfaceHolder holder) {}
 	
 	public void onButton(View view) {
-		if()
-		Intent d = new Intent(); //empty intent to send the double value back
-		d.putExtra("DEGREE", sHandler.getCurrentRotationValue());
-		setResult(RESULT_OK,d);
-		finish();
+		if((dAngleA == 500)) {
+			dAngleA = sHandler.getCurrentRotationValue();
+		} else {
+			Intent d = new Intent(); //empty intent to send the double value back
+			d.putExtra("ALPHA", dAngleA);
+			d.putExtra("BETA", sHandler.getCurrentRotationValue());
+			if (getParent() == null) {
+				setResult(RESULT_OK,d);
+			} else {
+			    getParent().setResult(Activity.RESULT_OK, d);
+			}
+			finish();
+		}
 	}
 }
