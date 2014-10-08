@@ -2,13 +2,16 @@ package ch.ez_gaming.groessenmesser;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -16,9 +19,10 @@ public class MainActivity extends Activity {
 	private Button mMeasureB, mCalcB, mResetB; //google convention to name imported widgets from xml with an "m" prefix
 	private EditText mDisTf;
 	private TextView mAlphaLa, mBetaLa, mResLa;
-	private double dAlpha, dBeta;
+	private double dAlpha, dBeta, dRes;
 	
 	final static int DEGREE_REQUEST_CODE_1 = 0;
+	final static int QR_REQUEST_CODE = 1;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +45,18 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+	    MenuItem menuItem = menu.add("Log");
+	    menuItem.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+		    @Override
+		    public boolean onMenuItemClick(MenuItem item) {
+			    Intent intent = new Intent("com.google.zxing.client.android.SCAN");
+			    intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
+			    startActivityForResult(intent, QR_REQUEST_CODE);
+			    return false;
+		    }
+	    });
+     
+    return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -88,10 +101,10 @@ public class MainActivity extends Activity {
     	String distanceEntered = mDisTf.getText().toString();
     	if(distanceEntered != null && !distanceEntered.isEmpty()) {
     		double dDistanceEntered = Double.parseDouble(distanceEntered);
-        	double c = dDistanceEntered/Math.sin(dAlpha);
-        	double dGamma = 180 - dAlpha - dBeta;
-        	double b = c * Math.sin(dBeta) / Math.sin(dGamma);
-        	mResLa.setText(String.format("The object is %.2f Meters high", b));
+        	double c = dDistanceEntered/Math.sin(Math.toRadians(dAlpha));
+        	double dGamma = 180.0 - dAlpha - dBeta;
+        	dRes = Math.sin(Math.toRadians(dBeta)) * c / Math.sin(Math.toRadians(dGamma));
+        	mResLa.setText(String.format("The object is %.2f Meters high", dRes));
         	mCalcB.setEnabled(false);
     	}
 	}
@@ -103,13 +116,35 @@ public class MainActivity extends Activity {
             	mMeasureB.setEnabled(false);
             	dAlpha = data.getDoubleExtra("ALPHA", 90);
             	mAlphaLa.setText(String.format("The angle alpha is: %.2f", dAlpha));
-            	dBeta = data.getDoubleExtra("BETA", 90);
+            	double tempD = data.getDoubleExtra("BETA", 90);
+            	dBeta = tempD - dAlpha;
             	mBetaLa.setText(String.format("The beta alpha is: %.2f", dBeta));
     			mMeasureB.setEnabled(false);
     			mCalcB.setEnabled(true);
     	        mResetB.setEnabled(true);
     	        mDisTf.setEnabled(true);
             }
-        }
+        } else 	if (requestCode == QR_REQUEST_CODE) {
+        	if (resultCode == RESULT_OK) {
+        		String logMsg = data.getStringExtra("SCAN_RESULT");
+        		log(logMsg);
+        		}
+        	}
     }
+	
+	private void log(String qrCode) {
+		Intent intent = new Intent("ch.appquest.intent.LOG");
+		 
+		if (getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isEmpty()) {
+		Toast.makeText(this, "Logbook App not Installed", Toast.LENGTH_LONG).show();
+		return;
+		}
+		 
+		intent.putExtra("ch.appquest.taskname", "Grössen Messer");
+		CharSequence calculatedObjectHeight = String.format("%.2f", dRes);
+		// Achtung, je nach App wird etwas anderes eingetragen (siehe Tabelle ganz unten):
+		intent.putExtra("ch.appquest.logmessage", qrCode + ": " + calculatedObjectHeight);
+		 
+		startActivity(intent);
+	}
 }
