@@ -13,6 +13,7 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 	}
 	//this is a hidden comment
+	//another one :0
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
