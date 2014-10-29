@@ -1,6 +1,12 @@
 package ch.ez_gaming.schatzkarte;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +29,8 @@ import org.osmdroid.views.overlay.TilesOverlay;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -33,19 +41,19 @@ import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements LocationListener{
 	private MapView mMap;
 	private LocationManager locationMan;
 	private Location curLoc;
-	List<Location> locs = new ArrayList<Location>();
+	List<GeoPoint> locs = new ArrayList<GeoPoint>(){};
 	private MyItemizedOverlay myItemizedOverlay;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
 		mMap = (MapView) findViewById(R.id.mapview /*eure ID der Map View */);
 		mMap.setTileSource(TileSourceFactory.MAPQUESTOSM);
 		 
@@ -54,7 +62,7 @@ public class MainActivity extends Activity implements LocationListener{
 		 
 		IMapController controller = mMap.getController();
 		controller.setZoom(18);
-		 
+			 
 		// Die TileSource beschreibt die Eigenschaften der Kacheln die wir anzeigen
 		XYTileSource treasureMapTileSource = new XYTileSource("mbtiles", ResourceProxy.string.offline_mode, 1, 20, 256, ".png", "http://example.org/");
 		 
@@ -76,6 +84,7 @@ public class MainActivity extends Activity implements LocationListener{
 		// Jetzt können wir den Overlay zu unserer Karte hinzufügen:
 		mMap.getOverlays().add(treasureMapTilesOverlay);
 		
+		mMap.getController().setCenter(new GeoPoint(47.223252, 8.817011));
 		locationMan = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);		
 		if(!locationMan.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			AlertDialog.Builder b = new AlertDialog.Builder(this);
@@ -98,12 +107,7 @@ public class MainActivity extends Activity implements LocationListener{
         ResourceProxy resourceProxy = new DefaultResourceProxyImpl(getApplicationContext());
          
         myItemizedOverlay = new MyItemizedOverlay(marker, resourceProxy);
-        mMap.getOverlays().add(myItemizedOverlay);
-         
-        GeoPoint myPoint1 = new GeoPoint(0*1000000, 0*1000000);
-        myItemizedOverlay.addItem(myPoint1, "myPoint1", "myPoint1");
-        GeoPoint myPoint2 = new GeoPoint(50*1000000, 50*1000000);
-        myItemizedOverlay.addItem(myPoint2, "myPoint2", "myPoint2");		
+        mMap.getOverlays().add(myItemizedOverlay);		
 	}
 
 	@Override
@@ -111,18 +115,47 @@ public class MainActivity extends Activity implements LocationListener{
 		super.onResume();
 		locationMan.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
 		locationMan.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, this);
+		load();
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
 		locationMan.removeUpdates(this);
+		save();
 	}
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+		MenuItem menuItem = menu.add("Log");
+		menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+	 
+			@Override
+			public boolean onMenuItemClick(MenuItem item) {
+				log();
+				return false;
+			}
+		});
+		
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	private void log() {
+		Intent intent = new Intent("ch.appquest.intent.LOG");
+		 
+		if (getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isEmpty()) {
+			Toast.makeText(this, "Logbook App not Installed", Toast.LENGTH_LONG).show();
+			return;
+		}
+		
+		String[] logMsg = new String[locs.size()];
+		for(int i = 0; i < locs.size(); i++) {
+			GeoPoint g = locs.get(i);
+			logMsg[i] = String.format("\"lat\" : %d, \"lon\" : %d", g.getLatitudeE6(), g.getLongitudeE6());
+		}
+		intent.putExtra("ch.appquest.taskname", "Schatzkarte");
+		intent.putExtra("ch.appquest.logmessage", logMsg);
+	 
+		startActivity(intent);				
 	}
 
 	@Override
@@ -137,13 +170,15 @@ public class MainActivity extends Activity implements LocationListener{
 		return super.onOptionsItemSelected(item);
 	}
 	
-	public void onButton(View v) {
-		locs.add(curLoc);
-		markPoint();
+    public void onButton(View view) {
+		locs.add(new GeoPoint(curLoc));
+		markPoint(locs.get(locs.size() - 1));
+		save();
 	}
 
-	private void markPoint() {
-		locs.get(locs.size() - 1);
+	private void markPoint(GeoPoint geoPoint) {
+		myItemizedOverlay.addItem(geoPoint, "#" + locs.size() , "");
+		mMap.getController().setCenter(geoPoint);
 	}
 
 	@Override
@@ -157,4 +192,47 @@ public class MainActivity extends Activity implements LocationListener{
 	public void onProviderEnabled(String provider) {}
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {}
+	
+	private void save() {
+		File tempSave = new File(getFilesDir(), "save.dat");
+		try {
+			FileWriter fw = new FileWriter(tempSave);
+			BufferedWriter bw = new BufferedWriter(fw);
+			for(int i = 0; i < locs.size(); i++) {
+				GeoPoint g = locs.get(i);
+				bw.write(Double.toString(g.getLatitude()));
+				bw.newLine();
+				bw.write(Double.toString(g.getLongitude()));
+				bw.newLine();
+			}
+			bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void load() {
+		locs = new ArrayList<GeoPoint>(){}; //make sure no coords are saved twice
+		File tempSave = new File(getFilesDir(), "save.dat");
+		try {
+			FileReader fr = new FileReader(tempSave);
+			BufferedReader br = new BufferedReader(fr);
+			String temp, temp2;
+			while(true) {
+				temp = br.readLine();
+				temp2 = br.readLine();
+				
+				if(temp == null || temp2 == null) {
+					break;
+				}
+				locs.add(new GeoPoint(Double.parseDouble(temp), Double.parseDouble(temp2)));
+				markPoint(locs.get(locs.size() - 1));
+			}
+			br.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
