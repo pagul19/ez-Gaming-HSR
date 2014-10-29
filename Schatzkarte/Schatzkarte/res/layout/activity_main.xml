@@ -8,9 +8,20 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="ch.ez_gaming.schatzkarte.MainActivity" >
 
-    <TextView
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        tilesource="Mapnik"
+        />
+
+    <Button
+        android:id="@+id/saveb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:onClick="onButton"
+        android:text="save coord" />
 
 </RelativeLayout>
